@@ -1,0 +1,73 @@
+.App {
+  text-align: center;
+}
+
+.loading{
+  background-image: url(./images/bg1.png);
+  background-size: cover;
+  background-repeat:no-repeat;
+}
+
+.connectWalletButton{
+  font-family: 'Inter', sans-serif;
+  font-style: thin;
+  font-size: 20px;
+  line-height: 24px;
+  align-items: center;
+  display: flex;
+  justify-content:space-evenly;
+  width: 240px;
+  background-color: #590998;
+  padding: 10px;
+  cursor: pointer;
+  color: white;
+}
+
+.Metabit{
+  height: 51px;
+
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 58px;
+
+  color: #958CFD;
+}
+
+.SubMetabit{
+  height: 40px;
+
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 29px;
+
+  color: #B3B3B3;
+  margin-top: 23px;
+}
+
+.SubConnectWallet{
+  width: 377px;
+  height: 40px;
+
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 29px;
+
+  color: #B3B3B3;
+  margin-top: 23px;
+  cursor: pointer;
+}
+
+.ownerdiv{
+  width:100%;
+  height:100vh;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
