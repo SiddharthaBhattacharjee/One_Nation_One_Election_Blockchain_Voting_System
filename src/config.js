@@ -1,2 +1,3 @@
-export const VoteContractAddress = '0x2981c1a57bbb7e702a97c2072087fccc000a5376';
+export const VoteContractAddress = '0x371d60ee5963557f2d11254e50306d2e44186dc0';
+//'0x2981c1a57bbb7e702a97c2072087fccc000a5376';
 //'0x62534764892304ea5166cdabc1be4205a0357dc5' broken
