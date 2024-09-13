@@ -17,11 +17,14 @@ function App() {
   const [correctNetwork, setCorrectNetwork] = useState(false); //fetched from metamask
   const [isOwner, setIsOwner] = useState(false); // fetched from smart contract, not editable
   const [isVoter, setIsVoter] = useState(true);
+  const [constituency, setConstituency] = useState(0);
   const [isVotingEnabled, setIsVotingEnabled] = useState(false); // fetched from smart contract, edited by toggleIsVE
   const [voted, setVoted] = useState(false);
   const [candidateList, setCandidateList] = useState([]);
   const [candidateVotes, setCandidateVotes] = useState([]);
+  const [candidateConstituency, setCandidateConstituency] = useState([]);
   const [isOverlay,setIsOverlay] = useState(false);
+  const [myCandidates, setMyCandidates] = useState([]);
 
   const connectWallet = async () => {
     try {
@@ -132,6 +135,26 @@ function App() {
     }
   }
 
+  const getCandidateConstituencies = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        //setting up provider
+        const provider = new Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
+        //calling the smart contract
+        let res = await VoteContract.getConstituencyCandidate();
+        setCandidateConstituency(res);
+      }
+      else {
+        console.log('Ethereum object not found');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const checkIsVoteEnabled = async () => {
     try {
       const { ethereum } = window;
@@ -141,8 +164,28 @@ function App() {
         const signer = provider.getSigner();
         const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
         //calling the smart contract
-        let isVEcheck = await VoteContract.isVotingEnabled();
+        let isVEcheck = await VoteContract.isVotingEnabled(constituency);
         setIsVotingEnabled(isVEcheck);
+      }
+      else {
+        console.log('Ethereum object not found');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const checkIsVoteEnabledOwner = async (cons) => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        //setting up provider
+        const provider = new Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
+        //calling the smart contract
+        let isVEcheck = await VoteContract.isVotingEnabled(cons);
+        return isVEcheck;
       }
       else {
         console.log('Ethereum object not found');
@@ -173,7 +216,29 @@ function App() {
     }
   }
 
-  const toggleisve = async () => {
+  const checkConstituency = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        //setting up provider
+        const provider = new Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
+        //calling the smart contract
+        const validatedAddressArg = getAddress(currentAccount);
+        let constituency = await VoteContract.getConstituency(validatedAddressArg);
+        //----------------------------------------------------------------
+        setConstituency(constituency);
+      }
+      else {
+        console.log('Ethereum object not found');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const toggleisve = async (cons) => {
     try {
       const { ethereum } = window;
       if (ethereum) {
@@ -184,9 +249,8 @@ function App() {
         const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
         console.log('VoteContract : ', VoteContract);
         //calling the smart contract
-        VoteContract.toggleVotingEnabled().then(
+        VoteContract.toggleVotingEnabled(cons).then(
           response => {
-            setIsVotingEnabled(!isVotingEnabled);
             console.log('toggleVotingEnabled : ', response);
           }
         ).catch(err => {
@@ -202,7 +266,7 @@ function App() {
     }
   }
 
-  const addCandidate = async (name) => {
+  const addCandidate = async (name,cons) => {
     try {
       const { ethereum } = window;
       if (ethereum) {
@@ -213,12 +277,13 @@ function App() {
         const VoteContract = new ethers.Contract(VoteContractAddress, VoteAbi.abi, signer);
         console.log('VoteContract : ', VoteContract);
         //calling the smart contract
+        let intcons = parseInt(cons);
         let strname = name.toString()
-        console.log("Name:", name);
-        VoteContract.addCandidate(strname).then(
+        console.log("Name:", name, "cons", cons);
+        VoteContract.addCandidate(strname,cons).then(
           response => {
             setCandidateList([...candidateList, name]);
-            console.log('toggleVotingEnabled : ', response);
+            console.log('addCandidate : ', response);
           }
         ).catch(err => {
           console.log(err);
@@ -233,7 +298,7 @@ function App() {
     }
   }
 
-  const addToWL = async (addr) => {
+  const addToWL = async (addr,cons) => {
     try {
       const { ethereum } = window;
       if (ethereum) {
@@ -245,7 +310,8 @@ function App() {
         console.log('VoteContract : ', VoteContract);
         //calling the smart contract
         const validatedAddressArg = getAddress(addr);
-        VoteContract.addToWhitelist(validatedAddressArg).then(
+        let intcons = parseInt(cons);
+        VoteContract.addToWhitelist(validatedAddressArg,intcons).then(
           response => {
             console.log('toggleVotingEnabled : ', response);
           }
@@ -337,16 +403,48 @@ function App() {
     }
   }
 
+  const updateMyCandidates = async () => {
+    try{
+      const matchingIndexes = candidateConstituency.map((value, index) => (value === constituency ? index : -1)).filter(index => index !== -1);
+      setMyCandidates(matchingIndexes);
+    } catch(error) {
+      console.log(error);
+    }
+  }
+
+
+  // useEffect(() => {
+  //   connectWallet();
+  //   checkOwner();
+  //   checkConstituency();
+  //   checkIsVoteEnabled();
+  //   checkIsVoter();
+  //   getCandidates();
+  //   getCandidateVotes();
+  //   getVoted();
+  //   getCandidateConstituencies();
+  //   updateMyCandidates();
+  // }, [connectWallet, checkOwner, checkIsVoteEnabled, checkIsVoter, getCandidates, getCandidateVotes,getVoted,checkConstituency,getCandidateConstituencies,updateMyCandidates]);
 
   useEffect(() => {
-    connectWallet();
-    checkOwner();
-    checkIsVoteEnabled();
-    checkIsVoter();
-    getCandidates();
-    getCandidateVotes();
-    getVoted();
-  }, [connectWallet, checkOwner, checkIsVoteEnabled, checkIsVoter, getCandidates, getCandidateVotes,getVoted]);
+    const interval2Sec = setInterval(() => {
+      checkOwner();
+      checkConstituency();
+      connectWallet();
+      checkIsVoteEnabled();
+      checkIsVoter();
+      getCandidates();
+      getCandidateVotes();
+      getVoted();
+      getCandidateConstituencies();
+      updateMyCandidates();
+    }, 500); // 2000 milliseconds = 2 seconds
+  
+    return () => {
+      clearInterval(interval2Sec);
+    }; // Cleanup intervals on component unmount
+  }, [connectWallet, checkOwner, checkIsVoteEnabled, checkIsVoter, getCandidates, getCandidateVotes, getVoted, checkConstituency, getCandidateConstituencies, updateMyCandidates]);
+  
 
   const Register = async () => {
     window.open('https://metamask.io', '_blank');
@@ -394,7 +492,7 @@ function App() {
             <Top uid={currentAccount} />
             <div className='ownerdiv'>
               <h1>Owner Controll Pannel</h1>
-              <OwnerPart isVE={isVotingEnabled} toggleIsVE={toggleisve} addC={addCandidate} addTWL={addToWL} remWL={RemoveFromWL} />
+              <OwnerPart isVE={checkIsVoteEnabledOwner} toggleIsVE={toggleisve} addC={addCandidate} addTWL={addToWL} remWL={RemoveFromWL} />
               <div>
                 <h4>Raw Vote Data</h4>
                 <p style={{borderColor:"black",borderWidth:"2px",borderStyle:"solid",padding:"30px"}}>
@@ -408,8 +506,8 @@ function App() {
             <Top uid={currentAccount} />
             <div className='ownerdiv'>
               <h1>Vote For The Candidate You Support</h1>
-              {candidateList.map((item, index) => 
-                <VoteBox isVEd={voted} cand={item} ci={index} cv={candidateVotes[index]} vote={Vote} isVEn={isVotingEnabled}/>
+              {myCandidates.map((item, index) => 
+                <VoteBox isVEd={voted} cand={candidateList[item]} ci={item} cv={candidateVotes[item]} vote={Vote} isVEn={isVotingEnabled}/>
               )}
             </div>
           </div>
